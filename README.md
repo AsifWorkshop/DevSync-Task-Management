@@ -1,2 +1,22 @@
 # DevSync-Task-Management
-# DevSync-Task-Management  An enterprise-grade, multi-tenant Task Management and Collaborative Code-Review platform designed explicitly for software engineering teams.   Unlike standard Kanban applications, this project bridges the gap between agile project management and strict asynchronous quality control. It introduces an automated code-review lifecycle with role-based dashboard architectures, gatekeeping criteria, and low-latency update ecosystems.  ## Core Architectural Highlights  * **Role-Based Access Control (RBAC) Interface Morphing:** Utilizes a unified relational state database layer that dynamically alters its presentation based on user context. Developers interact with execution-focused states (`TO DO`, `IN PROGRESS`, `APPLY REVIEW`, `DONE`), while Senior Engineers/Reviewers audit identical items via specialized quality pipelines (`TO DO`, `REVIEWING`, `ISSUE FOUND`, `DONE`). * **Strict Audit Checkpoint Gates:** Enforces hard automated validation constraints using public sub-task requirements. Developers are programmatically blocked from requesting code reviews until explicit acceptance criteria are fulfilled. * **Decoupled JSON-Payload Event Ledger:** Features a high-speed `JSONB` activity log layer designed specifically for ultra-low latency. It completely isolates real-time WebSocket communication channels from heavy multi-table relational `JOIN` overhead by serving pre-serialized frontend payloads. * **Slug-Isolated Security Domain:** Protects against ID Enumeration and IDOR vulnerabilities by replacing all internal sequential auto-incrementing database primary keys with randomized, unique alphanumeric slugs across public endpoints and API routing channels.  ## Tech Stack  * **Backend:** Python 3.11+, Django 5.x, Django Channels (WebSockets) * **Database & Caching:** PostgreSQL (utilizing advanced constraints, JSONB indices, and unlogged transactional caching engines) * **Frontend:** Vanilla ES6+ JavaScript (Modular architecture, native HTML5 Drag-and-Drop APIs) * **Task Queueing:** Transactional message log queues leveraging optimized PostgreSQL `FOR UPDATE SKIP LOCKED` patterns.
+
+An enterprise-grade, multi-tenant Task Management and Collaborative Code-Review platform designed explicitly for software engineering teams. 
+
+Unlike standard Kanban applications, this project bridges the gap between agile project management and strict asynchronous quality control. It introduces an automated code-review lifecycle with role-based dashboard architectures, gatekeeping criteria, and low-latency update ecosystems.
+
+## Core Architectural Highlights
+
+**Role-Based Access Control (RBAC) Interface Morphing:** Utilizes a unified relational state database layer that dynamically alters its presentation based on user context. Developers interact with execution-focused states (`TO DO`, `IN PROGRESS`, `APPLY REVIEW`, `DONE`), while Senior Engineers/Reviewers audit identical items via specialized quality pipelines (`TO DO`, `REVIEWING`, `ISSUE FOUND`, `DONE`).
+
+* **Strict Audit Checkpoint Gates:** Enforces hard automated validation constraints using public sub-task requirements. Developers are programmatically blocked from requesting code reviews until explicit acceptance criteria are fulfilled.
+
+* **Decoupled JSON-Payload Event Ledger:** Features a high-speed `JSONB` activity log layer designed specifically for ultra-low latency. It completely isolates real-time WebSocket communication channels from heavy multi-table relational `JOIN` overhead by serving pre-serialized frontend payloads.
+
+* **Slug-Isolated Security Domain:** Protects against ID Enumeration and IDOR vulnerabilities by replacing all internal sequential auto-incrementing database primary keys with randomized, unique alphanumeric slugs across public endpoints and API routing channels.
+
+## Tech Stack
+
+* **Backend:** Python 3.11+, Django 5.x, Django Channels (WebSockets)
+* **Database & Caching:** PostgreSQL (utilizing advanced constraints, JSONB indices, and unlogged transactional caching engines)
+* **Frontend:** Vanilla ES6+ JavaScript (Modular architecture, native HTML5 Drag-and-Drop APIs)
+* **Task Queueing:** Transactional message log queues leveraging optimized PostgreSQL `FOR UPDATE SKIP LOCKED` patterns.
