@@ -23,12 +23,11 @@ class Workspace(models.Model):
 
 class Task(models.Model):
     STATUS_CHOICES = [
-        ('TO_DO', 'To Do'),
-        ('IN_PROGRESS', 'In Progress'),
-        ('REVIEWING', 'Reviewing'),
-        ('ISSUE_FOUND', 'Issue Found'),
-        ('APPLY_REVIEW', 'Apply Review'),
-        ('DONE', 'Done'),
+        ('TODO', 'todo'),
+        ('PROGRESS', 'progress'),
+        ('ISSUE', 'issue'),
+        ('REVIEW', 'review'),
+        ('DONE', 'done'),
     ]
 
     PRIORITY_CHOICES = [
@@ -63,7 +62,7 @@ class Task(models.Model):
 
 class Member(models.Model): # Junction of Workspace and User 
     ROLE_CHOICES = [
-        ('OWNER', 'Owner'),
+        ('ADMIN', 'admin'),
         ('REVIEWER', 'Reviewer'),
         ('WORKER', 'Worker'),
     ]
@@ -85,16 +84,22 @@ class Member(models.Model): # Junction of Workspace and User
         return f"{self.member_of.username} joined at workspace : {self.workspace.name}"
 
 
-class Assign(models.Model): # Junction Task and user
+class Assign(models.Model): # Junction Task and user 
+    ROLE_CHOICES = [
+        ('REVIEWER', 'Reviewer'),
+        ('WORKER', 'Worker'),
+    ]
     slug=models.SlugField(max_length=255,unique=True,editable=False)
     task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_assign')
     assigned_to=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_assign')
+    role=models.CharField(max_length=100,choices=ROLE_CHOICES,default='WORKER')
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
     class Meta:
         indexes = [
             models.Index(fields=['task', 'assigned_to']),
+            models.Index(fields=['task','assigned_to','role']),
         ]
 
     def save(self, *args,**kwargs):
@@ -117,6 +122,7 @@ class Subtask(models.Model):
     type=models.CharField(max_length=100,choices=TYPE_CHOICES,default='PRIVATE')
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
+    checked=models.BooleanField(default=False)
 
     class Meta:
         indexes = [
@@ -134,15 +140,13 @@ class Subtask(models.Model):
     
 class Review(models.Model):
     STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
+        ('ISSUE', 'issue'),
+        ('DONE', 'done'),
     ]
     slug=models.SlugField(max_length=255,unique=True,editable=False)
     task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_review')
     reviewer=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_review')
-    status=models.CharField(max_length=100,choices=STATUS_CHOICES,default='PENDING')
-    found_issue=models.BooleanField(default=False)
+    status=models.CharField(max_length=100,choices=STATUS_CHOICES,default='DONE')
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
@@ -161,6 +165,7 @@ class Review(models.Model):
     
 class Issue(models.Model):
     slug=models.SlugField(max_length=255,unique=True,editable=False)
+    task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_issue')
     review=models.ForeignKey(Review,on_delete=models.CASCADE,related_name='review_issue')
     issued_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_issue')
     title=models.CharField(max_length=255)
@@ -178,7 +183,7 @@ class Issue(models.Model):
 
 class Feedback(models.Model):
     slug=models.SlugField(max_length=255,unique=True,editable=False)
-    issue=models.ForeignKey(Issue,on_delete=models.CASCADE,related_name='issue_feedback')
+    task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_feedback')
     feedback_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_feedback')
     content=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
@@ -186,7 +191,7 @@ class Feedback(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['issue', 'feedback_by']),
+            models.Index(fields=['task','feedback_by']),
         ]
     
     def save(self, *args,**kwargs):
@@ -195,11 +200,11 @@ class Feedback(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"Feedback on issue : {self.issue.title} by {self.feedback_by.username}"
+        return f"Feedback on issue :  by {self.feedback_by.username}"
 
 class Response(models.Model):
     slug=models.SlugField(max_length=255,unique=True,editable=False)
-    issue=models.ForeignKey(Issue,on_delete=models.CASCADE,related_name='issue_response')
+    task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_response')
     feedback=models.ForeignKey(Feedback,on_delete=models.CASCADE,related_name='feedback_response')
     response_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_response')
     content=models.TextField()
@@ -208,7 +213,7 @@ class Response(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['issue', 'feedback','response_by']),
+            models.Index(fields=['task','feedback','response_by']),
         ]
     
     def save(self, *args,**kwargs):
@@ -217,7 +222,7 @@ class Response(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"Response on feedback : {self.feedback.slug} by {self.response_by.username}"
+        return f"Response on feedback :  by {self.response_by.username}"
     
 
     
@@ -226,7 +231,8 @@ class ActivityLog(models.Model):
     TYPE_CHOICES = [
         ('TASK_CREATED', 'Task Created'),
         ('TASK_UPDATED', 'Task Updated'),
-        ('TASK_MOVED', 'Task Moved'),
+        ('TASK_COMPLETED', 'Task completed'),
+        ('TASK_ASSIGNED','Task Assigned'),
 
         ('REVIEW_REQUESTED', 'Review Requested'),
         ('REVIEW_APPROVED', 'Review Approved'),
@@ -239,7 +245,6 @@ class ActivityLog(models.Model):
         ('FEEDBACK_RESPONSE', 'Feedback Response'),
 
         ('WORKSPACE_JOINED', 'Workspace Joined'),
-        ('TASK_ASSIGNED', 'Task Assigned'),
 
         ('EXPIRE_ALERT', 'Expire Alert'),
     ]
@@ -316,7 +321,7 @@ class ActivityLog(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.type} by {self.actor.username}"
+        return f"{self.type} by {self.user.username}"
     
 
 class UserEventCursor(models.Model):

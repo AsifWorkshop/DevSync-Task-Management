@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DashBoard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand"><span class="brand-dot"></span>Dev Sync</div>
+        </div>
+        <div class="search-wrap">
+            <div class="search-box">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" placeholder="Search projects…" />
+            </div>
+        </div>
+        
+        <div class="nav-section">
+            <div class="nav-section-label open" onclick="toggleSection(this, 'personal-list')">
+                Personal Space 
+                <svg class="chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6" /></svg>
+            </div>
+            <a href="#" class="create-btn">New Space</a>
+            <ol class="project-list open" id="personal-list">
+                {% for membership in personal_workspaces %}
+                <li class="{% if membership.workspace.id == active_workspace.id %}active{% endif %}">
+                    <a href="{% url 'workspace_dashboard' membership.workspace.slug %}" class="workspace-link" data-slug="{{ membership.workspace.slug }}">
+                        {{ membership.workspace.name }}
+                    </a>
+                </li>
+                {% empty %}
+                <li>No personal workspaces.</li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-label open" onclick="toggleSection(this, 'work-list')">
+                WorkSpace 
+                <svg class="chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6" /></svg>
+            </div>
+            <a href="#" class="create-btn">New Space</a>
+            <ol class="project-list open" id="work-list">
+                {% for membership in corporate_workspaces %}
+                <li class="{% if membership.workspace.id == active_workspace.id %}active{% endif %}">
+                    <a href="{% url 'workspace_dashboard' membership.workspace.slug %}" class="workspace-link" data-slug="{{ membership.workspace.slug }}">
+                        {{ membership.workspace.name }}
+                    </a>
+                </li>
+                {% empty %}
+                <li>No corporate workspaces.</li>
+                {% endfor %}
+            </ol>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="avatar">AK</div>
+            <div class="user-info">
+                <div class="user-name">{{user}}</div>
+                <div class="user-role">10x Dev</div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle" id="mobileSidebarToggle" aria-label="Menu">☰</button>
+                <span class="topbar-title">
+                    {% if active_workspace %}{{ active_workspace.name }} · Kanban{% else %}Dev Sync{% endif %}
+                </span>
+            </div>
+        </header>
+        
+        <div class="board-wrap">
+            {% if active_workspace %}
+                <div class="board" id="kanbanBoard"></div>
+                
+                {{ active_workspace.slug|json_script:"active-workspace-slug" }}
+            {% else %}
+                <div class="board" id="welcomeBoard" style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; height:60vh; color:#fff;">
+                    <h1 style="font-family:'Syne', sans-serif; font-size:2.5rem; margin-bottom:12px;">Welcome to Dev Sync</h1>
+                    <p style="color:#aaa; font-size:1.1rem; max-width:450px; line-height:1.5;">Select a personal or corporate tracking space from your sidebar menu to pull real-time task allocations.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+<script src="{% static 'js/Task.js' %}"></script>
+</html>
