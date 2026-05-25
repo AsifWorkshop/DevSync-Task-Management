@@ -82,10 +82,10 @@ function updateAllCounters() {
 }
 
 async function apiCreateSubtask(taskSlug, titleText, onResponseSuccess) {
-    console.log(`📡 Initializing POST request for subtask addition under task: ${taskSlug}`);
+    console.log(`Initializing POST request for subtask addition under task: ${taskSlug}`);
 
     try {
-        const response = await fetch(`/TaskCard/${taskSlug}/addsubtask/`, {
+        const response = await fetch(`/TaskCard/${taskSlug}/${new_workspace_slug}/addsubtask/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -94,7 +94,6 @@ async function apiCreateSubtask(taskSlug, titleText, onResponseSuccess) {
             body: JSON.stringify({
                 'title': titleText,
                 'type': 'PRIVATE',
-                'workspace_slug': new_workspace_slug,
                 'role': currentUserRole,
             })
         });
@@ -114,10 +113,10 @@ async function apiCreateSubtask(taskSlug, titleText, onResponseSuccess) {
 }
 
 async function apiUpdateSubtaskStatus(taskSlug, subtaskId, isChecked) {
-    console.log(`📡 Syncing status to database... Subtask ID: ${subtaskId} | Checked: ${isChecked}`);
+    console.log(`Syncing status to database... Subtask ID: ${subtaskId} | Checked: ${isChecked}`);
 
     try {
-        const response = await fetch(`/TaskCard/${taskSlug}/toggle_subtask/`, {
+        const response = await fetch(`/TaskCard/${taskSlug}/${new_workspace_slug}/toggle_subtask/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -126,7 +125,6 @@ async function apiUpdateSubtaskStatus(taskSlug, subtaskId, isChecked) {
             body: JSON.stringify({
                 'subtask_id': subtaskId,
                 'checked': isChecked,
-                'workspace_slug': new_workspace_slug,
                 'role': currentUserRole,
             })
         });
@@ -147,7 +145,7 @@ async function apiUpdateCardMovement(taskSlug, targetColumn) {
     console.log(`Initializing POST request for workflow status update. Card: ${taskSlug} Column: ${targetColumn}`);
 
     try {
-        const response = await fetch(`/TaskCard/${taskSlug}/task_movement/`, {
+        const response = await fetch(`/TaskCard/${taskSlug}/${new_workspace_slug}/task_movement/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -155,7 +153,6 @@ async function apiUpdateCardMovement(taskSlug, targetColumn) {
             },
             body: JSON.stringify({
                 'status': targetColumn.toUpperCase(),
-                'workspace_slug': new_workspace_slug,
                 'role': currentUserRole,
             })
         });
@@ -301,7 +298,7 @@ function createRichTaskCard(data) {
     card.innerHTML = `
         <div class="card-header-flex">
             <span class="card-priority priority-${data.priority}">${escapeHtml(data.priorityLabel)}</span>
-            <a href="#"><span class="card-issue-badge">issue :${escapeHtml(data.issue_count)}</span></a>
+            <a href="/TaskCard/${data.task_slug}/${new_workspace_slug}/issue/"><span class="card-issue-badge">issue :${escapeHtml(data.issue_count)}</span></a>
         </div>
         <h3 class="card-main-title">${escapeHtml(data.title)}</h3>
         <div class="card-description-wrap">
@@ -333,12 +330,12 @@ function createRichTaskCard(data) {
                 </svg>
             </div>
             <div class="footer-right-group">
-                <a href="#"><div class="footer-icon-pill">
+                <a href="/TaskCard/${data.task_slug}/${new_workspace_slug}/attachment/"><div class="footer-icon-pill">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                     </svg><span>${data.attachments}</span>
                 </div></a>
-                <a href="#"><div class="footer-icon-pill">
+                <a href="/TaskCard/${data.task_slug}/${new_workspace_slug}/feedback/"><div class="footer-icon-pill">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg><span>${data.comments}</span>

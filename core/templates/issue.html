@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISSUE</title>
+    <link rel="stylesheet" href="{% static 'css/issue.css' %}">
+</head>
+
+<body data-task-slug="{{ task_slug }}">
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                {% if role == 'REVIEWER' %}
+                <div class="header-reviewer-row">
+                    <div>
+                        <div class="header-label">👤 Task assigned to</div>
+                        <ul class="users-list">
+                            {% for worker in workers %}
+                            <li>
+                                <a href="#">
+                                    <i class="fas fa-user-circle"></i>
+                                    {{ worker.username }}
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li style="color: #95a5a6; font-size: 14px; padding: 10px 0;">No workers assigned</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                     <a href="/Issue/new_issue/{{task_slug}}/create/" class="btn btn-edit update-btn" data-issue_slug="new_issue" data-task_slug="{{ task_slug }}">
+                            <i class="fas fa-edit"></i>
+                            Create New issue 
+                     </a>
+                </div>
+                {% endif %}
+
+                {% if role == 'WORKER' %}
+                <div>
+                    <div class="header-label">👁️ Task reviewed by</div>
+                    <ul class="users-list">
+                        {% for reviewer in reviewers %}
+                        <li>
+                            <a href="#">
+                                <i class="fas fa-user-circle"></i>
+                                {{ reviewer.username }}
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li style="color: #95a5a6; font-size: 14px; padding: 10px 0;">No reviewers assigned</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="main">
+            {% if not issues %}
+            <div class="no-issues">
+                <div>
+                    <i class="fas fa-inbox"></i>
+                    <p>No issues have been reported on this task card yet.</p>
+                </div>
+            </div>
+            {% else %}
+            <ul class="issues-list">
+                {% for issue in issues %}
+                <li class="issue-card">
+                    <div class="issue-header">
+                        <h4 class="issue-title">
+                            <i class="fas fa-exclamation-circle" style="color: #e74c3c; margin-right: 8px;"></i>
+                            {{ issue.title }}
+                        </h4>
+                    </div>
+                    <p class="issue-description">{{ issue.description }}</p>
+
+                    {% if role == 'REVIEWER' %}
+                    <div class="issue-actions">
+                        <a href="/Issue/{{ issue.slug }}/{{task_slug}}/update/" class="btn btn-edit update-btn" data-issue_slug="{{ issue.slug }}" data-task_slug="{{ task_slug }}">
+                            <i class="fas fa-edit"></i>
+                            Edit issue
+                        </a>
+                        <button class="btn btn-delete delete-btn" data-issue_slug="{{ issue.slug }}" data-task_slug="{{ task_slug }}">
+                            <i class="fas fa-trash-alt"></i>
+                            Delete
+                        </button>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+</body>
+<script src="{% static 'js/issue.js' %}"></script>
+</html>

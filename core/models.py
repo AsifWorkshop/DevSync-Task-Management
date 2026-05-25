@@ -166,7 +166,6 @@ class Review(models.Model):
 class Issue(models.Model):
     slug=models.SlugField(max_length=255,unique=True,editable=False)
     task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_issue')
-    review=models.ForeignKey(Review,on_delete=models.CASCADE,related_name='review_issue')
     issued_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_issue')
     title=models.CharField(max_length=255)
     description=models.TextField()
@@ -185,6 +184,7 @@ class Feedback(models.Model):
     slug=models.SlugField(max_length=255,unique=True,editable=False)
     task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_feedback')
     feedback_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_feedback')
+    issue=models.ForeignKey(Issue,on_delete=models.CASCADE,related_name='issue_feedback')
     content=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
@@ -207,6 +207,7 @@ class Response(models.Model):
     task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_response')
     feedback=models.ForeignKey(Feedback,on_delete=models.CASCADE,related_name='feedback_response')
     response_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_response')
+    issue=models.ForeignKey(Issue,on_delete=models.CASCADE,related_name='issue_response')
     content=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
@@ -276,32 +277,10 @@ class ActivityLog(models.Model):
         null=True,
         blank=True
     )
-
-    issue = models.ForeignKey(
-        'Issue',
-        on_delete=models.CASCADE,
-        related_name='issue_activity',
-        null=True,
-        blank=True
-    )
-
-    review = models.ForeignKey(
-        'Review',
-        on_delete=models.CASCADE,
-        related_name='review_activity',
-        null=True,
-        blank=True
-    )
-
     type = models.CharField(
         max_length=100,
         choices=TYPE_CHOICES
     )
-
-    payload = models.JSONField(default=dict)
-
-    is_processed = models.BooleanField(default=False)
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -309,10 +288,7 @@ class ActivityLog(models.Model):
             models.Index(fields=['user', 'type']),
             models.Index(fields=['workspace']),
             models.Index(fields=['task']),
-            models.Index(fields=['issue']),
-            models.Index(fields=['review']),
             models.Index(fields=['created_at']),
-            models.Index(fields=['is_processed']),
         ]
 
     def save(self, *args, **kwargs):

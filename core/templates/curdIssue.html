@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if action == 'create' %}Create New Issue{% else %}Edit Issue{% endif %}</title>
+    <link rel="stylesheet" href="{% static 'css/issue.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main">
+            <h2 style="margin-bottom: 20px; font-weight: 600; color: #2c3e50; display: flex; align-items: center; gap: 10px;">
+                <i class="fas {% if action == 'create' %}fa-plus-circle{% else %}fa-edit{% endif %}" style="color: #667eea;"></i>
+                {% if action == 'create' %}Create New Issue{% else %}Modify Existing Issue{% endif %}
+            </h2>
+            
+            <hr style="border: 0; border-top: 1px solid #ecf0f1; margin-bottom: 25px;">
+
+            <form id="issueForm" 
+                  data-issue-slug="{{ issue_slug }}" 
+                  data-task-slug="{{ task_slug }}" 
+                  data-action="{{ action }}">
+                
+                <div style="margin-bottom: 20px;">
+                    <label for="title" class="header-label" style="display: block; margin-bottom: 8px;">Issue Title</label>
+                    <input type="text" id="title" name="title" value="{{ title }}" required 
+                           placeholder="Enter a descriptive summary..."
+                           style="width: 100%; padding: 12px; border: 1px solid #ecf0f1; border-radius: 8px; font-size: 15px; color: #2c3e50;">
+                </div>
+
+                <div style="margin-bottom: 25px;">
+                    <label for="description" class="header-label" style="display: block; margin-bottom: 8px;">Detailed Description</label>
+                    <textarea id="description" name="description" rows="6" required 
+                              placeholder="Provide step-by-step details or requirements here..."
+                              style="width: 100%; padding: 12px; border: 1px solid #ecf0f1; border-radius: 8px; font-size: 15px; color: #2c3e50; font-family: inherit; resize: vertical;">{{ description }}</textarea>
+                </div>
+
+                <div class="issue-actions" style="border-top: none; padding-top: 0; justify-content: flex-end;">
+                    <button type="button" class="btn" onclick="window.history.back();" style="background-color: #95a5a6; color: white;">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-create" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <i class="fas fa-save"></i>
+                        {% if action == 'create' %}Save Issue{% else %}Apply Updates{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script src="{% static 'js/curdIssue.js' %}"></script>
+</html>
