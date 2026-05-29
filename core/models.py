@@ -188,12 +188,18 @@ class Feedback(models.Model):
     content=models.TextField()
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
+    parent = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='replies'
+    )
 
     class Meta:
         indexes = [
             models.Index(fields=['task','feedback_by']),
         ]
-    
     def save(self, *args,**kwargs):
         if not self.slug:
             self.slug=generate_unique_slug(Feedback)
@@ -201,30 +207,6 @@ class Feedback(models.Model):
     
     def __str__(self):
         return f"Feedback on issue :  by {self.feedback_by.username}"
-
-class Response(models.Model):
-    slug=models.SlugField(max_length=255,unique=True,editable=False)
-    task=models.ForeignKey(Task,on_delete=models.CASCADE,related_name='task_response')
-    feedback=models.ForeignKey(Feedback,on_delete=models.CASCADE,related_name='feedback_response')
-    response_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name='user_response')
-    issue=models.ForeignKey(Issue,on_delete=models.CASCADE,related_name='issue_response')
-    content=models.TextField()
-    created_at=models.DateTimeField(auto_now_add=True)
-    updated_at=models.DateTimeField(auto_now=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['task','feedback','response_by']),
-        ]
-    
-    def save(self, *args,**kwargs):
-        if not self.slug:
-            self.slug=generate_unique_slug(Response)
-        super().save(*args, **kwargs)
-    
-    def __str__(self):
-        return f"Response on feedback :  by {self.response_by.username}"
-    
 
     
 class ActivityLog(models.Model):

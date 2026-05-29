@@ -3,7 +3,7 @@ from . import utils
 from django.http import HttpResponse,JsonResponse,Http404
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Workspace,Task,Member,Assign,Review,Feedback,Response,ActivityLog,UserEventCursor,Attachment,Issue,Subtask
+from .models import Workspace,Task,Member,Assign,Review,Feedback,ActivityLog,UserEventCursor,Attachment,Issue,Subtask
 from django.views import View
 import json
 from django.views.decorators.http import require_POST
@@ -82,7 +82,11 @@ class TaskCard(View):
         return render(request,'issue.html',context)
 
     def get_feedback(self,request,task_slug,workspace_slug):
-        return render(request,'feedback.html')
+        issues=Issue.objects.filter(task__slug=task_slug).all()
+        context={
+            'issues':issues,
+        }
+        return render(request,'LiveFeedback.html',context)
 
     def get_attachment(self,request,task_slug,workspace_slug):
         return render(request,'attachment.html')

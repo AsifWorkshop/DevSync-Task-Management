@@ -4,7 +4,7 @@ from channels.db import database_sync_to_async
 from django.utils import timezone
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-from .models import Workspace,Task,Member,Assign,Review,Feedback,Response,ActivityLog,UserEventCursor,Attachment,Issue,Subtask
+from .models import Workspace,Task,Member,Assign,Review,Feedback,ActivityLog,UserEventCursor,Attachment,Issue,Subtask
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count,Q
 
@@ -263,4 +263,87 @@ class IssueConsumer(AsyncWebsocketConsumer):
         
 
 
-    
+class FeedbackConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.issue_slug = self.scope['url_route']['kwargs']['issue_slug']
+        self.room_group_name = f"issue_comments_{self.issue_slug}"
+
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
+
+        historical_comments = await self.get_historical_feedbacks()
+        await self.send(text_data=json.dumps({
+            "type": "initial_comments",
+            "comments": historical_comments
+        }))
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        content = data.get('content', '').strip()
+        parent_id = data.get('parent_id')  
+        user = self.scope["user"]
+
+        if not user.is_authenticated or not content:
+            return
+
+        broadcast_data = await self.save_feedback_node(user, content, parent_id)
+
+        if broadcast_data:
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "comment_broadcast",
+                    **broadcast_data
+                }
+            )
+
+    async def comment_broadcast(self, event):
+        await self.send(text_data=json.dumps(event))
+
+    @database_sync_to_async
+    def get_historical_feedbacks(self):
+        feedbacks = Feedback.objects.filter(issue__slug=self.issue_slug).order_by('created_at')
+        return [
+            {
+                "id": fb.id,
+                "parent_id": fb.parent_id,
+                "author": fb.feedback_by.username,
+                "content": fb.content,
+                "initials": fb.feedback_by.username[:2].upper()
+            }
+            for fb in feedbacks
+        ]
+
+    @database_sync_to_async
+    def save_feedback_node(self, user, content, parent_id):
+        try:
+            issue_obj = Issue.objects.get(slug=self.issue_slug)
+            task_obj = issue_obj.task
+        except Issue.DoesNotExist:
+            return None
+
+        parent_node = None
+        if parent_id:
+            try:
+                parent_node = Feedback.objects.get(id=parent_id)
+            except Feedback.DoesNotExist:
+                return None
+
+        feedback_obj = Feedback.objects.create(
+            task=task_obj,
+            issue=issue_obj,
+            feedback_by=user,
+            content=content,
+            parent=parent_node
+        )
+
+        return {
+            "id": feedback_obj.id,
+            "parent_id": parent_id,
+            "author": user.username,
+            "content": content,
+            "initials": user.username[:2].upper()
+        }
